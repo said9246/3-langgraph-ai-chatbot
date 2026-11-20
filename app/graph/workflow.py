@@ -1,6 +1,7 @@
 
 from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.checkpoint.memory import InMemorySaver
+
 from app.llm.model import llm, llm_with_tools
 from app.graph.rag_node import rag_node
 from app.tools.tool_node import tool_node
@@ -48,7 +49,6 @@ def chatbot(state: MessagesState):
     return {"messages": [response]}
 
 
-# Conditional routing for tools
 def tools_router(state: MessagesState):
     last_message = state["messages"][-1]
 
@@ -83,7 +83,6 @@ builder.add_conditional_edges(
 )
 
 builder.add_edge("tools", "chatbot")
-
 builder.add_edge("rag", END)
 
 memory = InMemorySaver()

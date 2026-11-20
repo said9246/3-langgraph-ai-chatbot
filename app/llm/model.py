@@ -8,11 +8,10 @@ load_dotenv()
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite",
-    # temperature=0,
-    google_api_key=os.getenv("GEMINI_API_KEY")
+    google_api_key=os.getenv("GEMINI_API_KEY"),
+    streaming=True
 )
 
-
-# code for tools to add 
+# Tools
 tools = [calculator, search_tool]
 llm_with_tools = llm.bind_tools(tools)

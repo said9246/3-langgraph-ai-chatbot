@@ -16,6 +16,7 @@ for message in st.session_state.messages:
 prompt = st.chat_input("Ask me anything...")
 
 if prompt:
+
     st.session_state.messages.append({
         "role": "user",
         "content": prompt
@@ -30,26 +31,35 @@ if prompt:
         }
     }
 
-    response = graph.invoke(
-        {"messages": [{"role": "user", "content": prompt}]},
-        config=config
-    )
+    with st.chat_message("assistant"):
 
-    content = response["messages"][-1].content
+        def stream_response():
 
-    if isinstance(content, list):
-        ai_response = "\n".join(
-            block["text"]
-            for block in content
-            if isinstance(block, dict) and block.get("type") == "text"
-        )
-    else:
-        ai_response = content
+            for chunk, metadata in graph.stream(
+                {"messages": [{"role": "user", "content": prompt}]},
+                config=config,
+                stream_mode="messages"
+            ):
+
+                # Only chatbot node response
+                if metadata.get("langgraph_node") != "chatbot":
+                    continue
+
+                content = chunk.content
+
+                if isinstance(content, str):
+                    if content:
+                        yield content
+
+                elif isinstance(content, list):
+                    for block in content:
+                        if isinstance(block, dict):
+                            if block.get("type") == "text":
+                                yield block["text"]
+
+        ai_response = st.write_stream(stream_response())
 
     st.session_state.messages.append({
         "role": "assistant",
         "content": ai_response
     })
-
-    with st.chat_message("assistant"):
-        st.write(ai_response)
